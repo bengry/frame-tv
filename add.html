@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frame — Add albums to your TV</title>
+<link rel="icon" href="data:,">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-subtle: #eef1f5;
+    --text: #1b1d21;
+    --muted: #5b626e;
+    --border: #d8dde6;
+    --primary: #1a73e8;
+    --primary-hover: #1558b0;
+    --on-primary: #ffffff;
+    --ok-bg: #e6f4ea;
+    --ok-text: #137333;
+    --err-bg: #fce8e6;
+    --err-text: #c5221f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121316;
+      --surface: #1c1e23;
+      --surface-subtle: #252830;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --border: #333741;
+      --primary: #8ab4f8;
+      --primary-hover: #aecbfa;
+      --on-primary: #111317;
+      --ok-bg: #132a1b;
+      --ok-text: #81c995;
+      --err-bg: #311717;
+      --err-text: #f28b82;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  main {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+  }
+  header {
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 26px;
+    line-height: 1.2;
+    margin: 0 0 4px;
+    font-weight: 600;
+  }
+  .subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .help {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 112px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    resize: vertical;
+  }
+  textarea:focus {
+    outline: 2px solid var(--primary);
+    border-color: var(--primary);
+  }
+  textarea[aria-invalid="true"] {
+    border-color: var(--err-text);
+  }
+  button {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 11px 20px;
+    font: 600 15px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: var(--on-primary);
+    width: 100%;
+    margin-top: 12px;
+    padding: 13px 20px;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+  }
+  .btn-secondary {
+    background: var(--surface-subtle);
+    color: var(--text);
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+  .account-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    word-break: break-all;
+  }
+  .errors {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--err-bg);
+    color: var(--err-text);
+    font-size: 13px;
+    list-style: none;
+  }
+  .errors li + li {
+    margin-top: 4px;
+  }
+  .status {
+    margin-top: 12px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .status.ok {
+    background: var(--ok-bg);
+    color: var(--ok-text);
+  }
+  .status.err {
+    background: var(--err-bg);
+    color: var(--err-text);
+  }
+  .status.info {
+    background: var(--surface-subtle);
+    color: var(--muted);
+  }
+  .pending-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+  }
+  .pending-list li {
+    padding: 9px 0;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    word-break: break-all;
+  }
+  .pending-meta {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 24px;
+  }
+  footer a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Frame</h1>
+    <p class="subtitle">Send Google Photos shared albums to your TV.</p>
+  </header>
+
+  <section class="card" aria-labelledby="account-heading">
+    <h2 class="card-title" id="account-heading">Google account</h2>
+    <div id="signedOutView">
+      <p class="help">Sign in with the same Google account linked in Frame on your TV.</p>
+      <button type="button" id="signInBtn" class="btn-secondary">Sign in with Google</button>
+    </div>
+    <div id="signedInView" class="row hidden">
+      <span class="account-pill" id="accountLabel">Signed in</span>
+      <button type="button" id="signOutBtn" class="btn-secondary">Switch account</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="links-heading">
+    <h2 class="card-title" id="links-heading">Paste one or more Google Photos shared-album links</h2>
+    <p class="help">In Google Photos, open an album &rarr; Share &rarr; Copy link.</p>
+    <textarea
+      id="linksInput"
+      spellcheck="false"
+      autocapitalize="off"
+      autocomplete="off"
+      placeholder="https://photos.app.goo.gl/..."
+      aria-describedby="linksErrors"
+    ></textarea>
+    <ul id="linksErrors" class="errors hidden" aria-live="polite"></ul>
+    <button type="button" id="sendBtn" class="btn-primary" disabled>Send to TV</button>
+    <div id="sendStatus" class="status hidden" aria-live="polite"></div>
+  </section>
+
+  <section class="card hidden" id="pendingCard" aria-labelledby="pending-heading">
+    <div class="row">
+      <h2 class="card-title" id="pending-heading" style="margin:0;">Waiting for TV</h2>
+      <button type="button" id="refreshBtn" class="btn-secondary">Refresh</button>
+    </div>
+    <p class="help" id="pendingEmpty" style="margin-top:8px;margin-bottom:0;">
+      None &mdash; your TV has picked up all sent links.
+    </p>
+    <ul id="pendingList" class="pending-list hidden"></ul>
+  </section>
+
+  <footer>
+    <a href="index.html">Frame home</a> &middot; <a href="privacy.html">Privacy policy</a>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const CLIENT_ID = "323633157807-1a63m3umom5c40okjm47uq45un1arlro.apps.googleusercontent.com";
+  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+  const DRIVE_FOLDER_NAME = "Frame TV app data";
+  const DRIVE_FOLDER_DESCRIPTION =
+    "Settings backup and album links for the Frame photo slideshow on your TV. Safe to delete; Frame recreates it.";
+  const DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
+  const PENDING_FILE_NAME = "pending-albums.json";
+  const DRIVE_FILES_API = "https://www.googleapis.com/drive/v3/files";
+  const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3/files";
+  const DRIVE_ABOUT_API = "https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)";
+
+  let accessToken = "";
+  let cachedFolderId = "";
+  let tokenClient = null;
+  let busy = false;
+
+  const signInBtn = document.getElementById("signInBtn");
+  const signOutBtn = document.getElementById("signOutBtn");
+  const signedOutView = document.getElementById("signedOutView");
+  const signedInView = document.getElementById("signedInView");
+  const accountLabel = document.getElementById("accountLabel");
+  const linksInput = document.getElementById("linksInput");
+  const linksErrors = document.getElementById("linksErrors");
+  const sendBtn = document.getElementById("sendBtn");
+  const sendStatus = document.getElementById("sendStatus");
+  const pendingCard = document.getElementById("pendingCard");
+  const pendingList = document.getElementById("pendingList");
+  const pendingEmpty = document.getElementById("pendingEmpty");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  function validateShareUrl(candidate) {
+    const trimmed = candidate.trim();
+    let parsed;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      return "Malformed URL";
+    }
+    if (parsed.protocol !== "https:" || !parsed.hostname) {
+      return "Album link must start with https://";
+    }
+    const host = parsed.hostname.toLowerCase();
+    const path = parsed.pathname || "";
+    const okShort = host === "photos.app.goo.gl" && path.length > 1;
+    const okLegacy = host === "goo.gl" && path.startsWith("/photos/");
+    const okDirect = host === "photos.google.com" && path.startsWith("/share/");
+    if (!okShort && !okLegacy && !okDirect) {
+      return "Allowed hosts: photos.app.goo.gl, goo.gl/photos/..., or photos.google.com/share/...";
+    }
+    return null;
+  }
+
+  function validateLinksInput(raw) {
+    const lines = raw.split(/\r?\n/);
+    const validUrls = [];
+    const errors = [];
+    const seen = new Set();
+
+    lines.forEach((line, idx) => {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) return;
+      const tokens = trimmedLine.split(/\s+/);
+      for (const token of tokens) {
+        if (!token) continue;
+        const err = validateShareUrl(token);
+        if (err) {
+          errors.push(`Line ${idx + 1}: ${err} (${token})`);
+        } else if (!seen.has(token)) {
+          seen.add(token);
+          validUrls.push(token);
+        }
+      }
+    });
+    return { validUrls, errors };
+  }
+
+  function renderValidation() {
+    const raw = linksInput.value;
+    const { validUrls, errors } = validateLinksInput(raw);
+
+    linksErrors.replaceChildren();
+    if (errors.length > 0) {
+      for (const msg of errors) {
+        const li = document.createElement("li");
+        li.textContent = msg;
+        linksErrors.appendChild(li);
+      }
+      linksErrors.classList.remove("hidden");
+      linksInput.setAttribute("aria-invalid", "true");
+    } else {
+      linksErrors.classList.add("hidden");
+      linksInput.removeAttribute("aria-invalid");
+    }
+
+    sendBtn.disabled = busy || !accessToken || validUrls.length === 0 || errors.length > 0;
+    return { validUrls, errors };
+  }
+
+  function setStatus(kind, message) {
+    if (!message) {
+      sendStatus.className = "status hidden";
+      sendStatus.textContent = "";
+      return;
+    }
+    sendStatus.className = `status ${kind}`;
+    sendStatus.textContent = message;
+  }
+
+  function formatAge(ms) {
+    const diffSec = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+    if (diffSec < 60) return "just now";
+    const mins = Math.floor(diffSec / 60);
+    if (mins < 60) return `${mins} min ago`;
+    return `${Math.floor(mins / 60)} h ago`;
+  }
+
+  function renderPendingItems(items) {
+    pendingList.replaceChildren();
+    if (!items || items.length === 0) {
+      pendingList.classList.add("hidden");
+      pendingEmpty.classList.remove("hidden");
+      return;
+    }
+    pendingEmpty.classList.add("hidden");
+    pendingList.classList.remove("hidden");
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.textContent = item.url;
+      if (item.addedAt) {
+        const meta = document.createElement("span");
+        meta.className = "pending-meta";
+        meta.textContent = `Sent ${formatAge(item.addedAt)}`;
+        li.appendChild(meta);
+      }
+      pendingList.appendChild(li);
+    }
+  }
+
+  async function driveFetch(url, options = {}) {
+    const headers = Object.assign({ Authorization: `Bearer ${accessToken}` }, options.headers || {});
+    const resp = await fetch(url, Object.assign({}, options, { headers }));
+    if (resp.status === 401) {
+      accessToken = "";
+      cachedFolderId = "";
+      updateAuthUi("");
+      throw new Error("Google session expired. Please sign in again.");
+    }
+    if (!resp.ok) {
+      throw new Error(`Google Drive error (HTTP ${resp.status})`);
+    }
+    return resp;
+  }
+
+  async function ensureFrameFolderId() {
+    if (cachedFolderId) {
+      const checkResp = await fetch(
+        `${DRIVE_FILES_API}/${encodeURIComponent(cachedFolderId)}?fields=id,trashed`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      if (checkResp.ok) {
+        const meta = await checkResp.json();
+        if (meta && !meta.trashed) return cachedFolderId;
+      }
+      cachedFolderId = "";
+    }
+
+    const q = `name='${DRIVE_FOLDER_NAME}' and mimeType='${DRIVE_FOLDER_MIME}' and trashed=false`;
+    const searchUrl = `${DRIVE_FILES_API}?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=1`;
+    const searchResp = await driveFetch(searchUrl);
+    const searchData = await searchResp.json();
+    if (searchData.files && searchData.files.length > 0) {
+      cachedFolderId = searchData.files[0].id;
+      return cachedFolderId;
+    }
+
+    const createResp = await driveFetch(`${DRIVE_FILES_API}?fields=id`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=UTF-8" },
+      body: JSON.stringify({
+        name: DRIVE_FOLDER_NAME,
+        description: DRIVE_FOLDER_DESCRIPTION,
+        mimeType: DRIVE_FOLDER_MIME,
+      }),
+    });
+    const created = await createResp.json();
+    cachedFolderId = created.id;
+    return cachedFolderId;
+  }
+
+  async function findPendingFileId(folderId) {
+    const q = `name='${PENDING_FILE_NAME}' and '${folderId}' in parents and trashed=false`;
+    const url = `${DRIVE_FILES_API}?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`;
+    const resp = await driveFetch(url);
+    const data = await resp.json();
+    return data.files && data.files.length > 0 ? data.files[0].id : null;
+  }
+
+  async function readPendingState() {
+    const folderId = await ensureFrameFolderId();
+    const fileId = await findPendingFileId(folderId);
+    if (!fileId) {
+      return { folderId, fileId: null, items: [] };
+    }
+    const resp = await driveFetch(`${DRIVE_FILES_API}/${encodeURIComponent(fileId)}?alt=media`);
+    const text = await resp.text();
+    if (!text.trim()) {
+      return { folderId, fileId, items: [] };
+    }
+    try {
+      const parsed = JSON.parse(text);
+      const items = Array.isArray(parsed.items)
+        ? parsed.items.filter((x) => x && typeof x.url === "string" && x.url.trim())
+        : [];
+      return { folderId, fileId, items };
+    } catch {
+      return { folderId, fileId, items: [] };
+    }
+  }
+
+  async function writePendingItems(folderId, existingFileId, items) {
+    const payload = JSON.stringify({ v: 1, items });
+    const metadata = existingFileId
+      ? { name: PENDING_FILE_NAME }
+      : { name: PENDING_FILE_NAME, parents: [folderId] };
+    const boundary = `frame_pending_${Math.random().toString(36).slice(2)}`;
+    const body =
+      `--${boundary}\r\n` +
+      `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+      `${JSON.stringify(metadata)}\r\n` +
+      `--${boundary}\r\n` +
+      `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+      `${payload}\r\n` +
+      `--${boundary}--\r\n`;
+
+    const url = existingFileId
+      ? `${DRIVE_UPLOAD_API}/${encodeURIComponent(existingFileId)}?uploadType=multipart`
+      : `${DRIVE_UPLOAD_API}?uploadType=multipart`;
+    await driveFetch(url, {
+      method: existingFileId ? "PATCH" : "POST",
+      headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+      body,
+    });
+  }
+
+  async function refreshPendingList() {
+    if (!accessToken) return;
+    refreshBtn.disabled = true;
+    try {
+      const { items } = await readPendingState();
+      renderPendingItems(items);
+    } catch (err) {
+      setStatus("err", err.message || "Could not load pending links.");
+    } finally {
+      refreshBtn.disabled = false;
+    }
+  }
+
+  async function fetchSignedInEmail() {
+    try {
+      const resp = await driveFetch(DRIVE_ABOUT_API);
+      const data = await resp.json();
+      return (data && data.user && data.user.emailAddress) || "";
+    } catch {
+      return "";
+    }
+  }
+
+  function updateAuthUi(email) {
+    if (accessToken) {
+      signedOutView.classList.add("hidden");
+      signedInView.classList.remove("hidden");
+      pendingCard.classList.remove("hidden");
+      accountLabel.textContent = email ? `Signed in as ${email}` : "Signed in";
+    } else {
+      signedOutView.classList.remove("hidden");
+      signedInView.classList.add("hidden");
+      pendingCard.classList.add("hidden");
+      accountLabel.textContent = "Signed in";
+      renderPendingItems([]);
+    }
+    renderValidation();
+  }
+
+  function ensureTokenClient() {
+    if (tokenClient) return tokenClient;
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      return null;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: async (resp) => {
+        if (resp.error || !resp.access_token) {
+          setStatus("err", resp.error_description || resp.error || "Sign-in cancelled.");
+          return;
+        }
+        accessToken = resp.access_token;
+        setStatus("", "");
+        updateAuthUi("");
+        const email = await fetchSignedInEmail();
+        updateAuthUi(email);
+        await refreshPendingList();
+      },
+    });
+    return tokenClient;
+  }
+
+  signInBtn.addEventListener("click", () => {
+    const client = ensureTokenClient();
+    if (!client) {
+      setStatus("err", "Google Sign-In is still loading. Please try again in a moment.");
+      return;
+    }
+    client.requestAccessToken({ prompt: "consent" });
+  });
+
+  signOutBtn.addEventListener("click", () => {
+    const tok = accessToken;
+    accessToken = "";
+    cachedFolderId = "";
+    updateAuthUi("");
+    setStatus("", "");
+    if (tok && window.google && google.accounts && google.accounts.oauth2) {
+      google.accounts.oauth2.revoke(tok, () => {});
+    }
+  });
+
+  linksInput.addEventListener("input", () => {
+    renderValidation();
+  });
+
+  sendBtn.addEventListener("click", async () => {
+    const { validUrls, errors } = renderValidation();
+    if (!accessToken || validUrls.length === 0 || errors.length > 0 || busy) return;
+    busy = true;
+    renderValidation();
+    setStatus("info", "Sending to your TV…");
+    try {
+      const { folderId, fileId, items } = await readPendingState();
+      const existingUrls = new Set(items.map((item) => item.url.trim()));
+      const nowMs = Date.now();
+      const merged = items.slice();
+      for (const url of validUrls) {
+        if (!existingUrls.has(url)) {
+          existingUrls.add(url);
+          merged.push({ url, addedAt: nowMs, from: "phone" });
+        }
+      }
+      await writePendingItems(folderId, fileId, merged);
+      linksInput.value = "";
+      renderValidation();
+      renderPendingItems(merged);
+      setStatus("ok", "Sent \u2713 \u00b7 your TV will add them in a few seconds");
+    } catch (err) {
+      setStatus("err", err.message || "Could not send links to Google Drive.");
+    } finally {
+      busy = false;
+      renderValidation();
+    }
+  });
+
+  refreshBtn.addEventListener("click", refreshPendingList);
+
+  renderValidation();
+})();
+</script>
+</body>
+</html>

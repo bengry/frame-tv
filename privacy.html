@@ -18,16 +18,19 @@
 <p>Frame stores its settings on your TV: the Google Photos shared-album links you add, slideshow settings,
 the list of photos you chose to hide, and your weather city.</p>
 
-<h2>Google Drive backup (optional, off by default)</h2>
-<p>If you turn on backup, Frame asks for one permission: <code>drive.appdata</code>
-("see, create, and delete its own configuration data in your Google Drive").
-Frame then saves one settings file in a hidden app folder in your own Google Drive.
-Frame cannot see, read or change any other file in your Drive.</p>
+<h2>Google Drive backup and Add from phone (optional, off by default)</h2>
+<p>If you link a Google account for backup or "Add from phone", Frame asks for <code>drive.file</code>
+(access only to files and folders Frame creates) and <code>email</code> (to show which account is signed in on the TV).
+Frame stores its files in a folder named <code>Frame TV app data</code> in your Google Drive, containing only files Frame created;
+Frame can't see your other files.</p>
+<p>When you use <a href="add.html">Add albums from your phone</a> (<code>add.html</code>), the page signs in with
+<code>drive.file</code> directly in your browser and saves your pasted album links to <code>pending-albums.json</code> inside that
+<code>Frame TV app data</code> folder so your TV can pick them up.</p>
 
 <h2>What Frame does not do</h2>
 <p>Frame has no servers. It does not collect, sell or share personal data, and it has no ads or analytics.
-Your data goes only between your TV and Google's services (Google Photos, Google Drive) public weather services
-(Open-Meteo forecast and geocoding), which receive only the city or coordinates for the forecast, and,
+Your data goes only between your TV (or your browser on <code>add.html</code>) and Google's services (Google Photos, Google Drive),
+public weather services (Open-Meteo forecast and geocoding), which receive only the city or coordinates for the forecast, and,
 when no city is set, an IP-location service (GeoJS or ipwho.is) to find your approximate city.</p>
 
 <h2>Google API Services User Data Policy</h2>
@@ -36,8 +39,8 @@ when no city is set, an IP-location service (GeoJS or ipwho.is) to find your app
 including the Limited Use requirements.</p>
 
 <h2>Removing your data</h2>
-<p>Turn off backup or press "Sign out" in Frame's Settings, and remove Frame's access at
-<a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.
+<p>Turn off backup or press "Sign out" in Frame's Settings, delete the <code>Frame TV app data</code> folder in Google Drive if desired,
+and remove Frame's access at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.
 Uninstalling Frame deletes all data on the TV.</p>
 
 <h2>Contact</h2>
